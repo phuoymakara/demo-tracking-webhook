@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Webhook 53Cloud</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f9;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    #messages {
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      height: 400px;
+      background-color: black;
+      color: white;
+      overflow-y: scroll;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #303e27;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2d3724;
+    }
+    #messageInput{
+     outline: none;
+     padding: 4px;
+     border: 1px solid #ddd;
+     border-radius: 10px;
+    }
+    ul li{
+      margin-bottom: 10px;
+      color: white;
+      font-size: medium;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Webhook Tracking Client 53Cloud</h1>
+    <ul id="messages"></ul>
+    <!-- <input type="text" name="" id="messageInput" disabled placeholder="type message"> -->
+    <button id="sendButton" disabled>Send</button>
+  </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.0/socket.io.js" integrity="sha512-OovVc8Xk/+ils70VE978+ILm2IvIisZskNCaDvaTtXt7a2O3eioYv8SVKfjdVU1za9Ir/KHIqweNEGLLFk6bdw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+
+      const socket = io('https://demo-appsocket.53cloudsite.click');
+
+    const messagesList = document.getElementById('messages');
+    const sendgButton = document.getElementById('sendButton');
+    const messageInput = document.getElementById('messageInput');
+
+    function formatCurrentTime() {
+      const date = new Date();
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+
+      // Convert to 12-hour format
+      hours = hours % 12;
+      hours = hours ? hours : 12; // If hour is 0, set to 12
+
+      // Pad minutes with leading zero if less than 10
+      const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+
+      return `${hours}:${formattedMinutes} ${ampm}`;
+    }
+
+    function addMessage(data, className){
+      const li = document.createElement('li');
+      li.textContent = `${data?.userId} - ${data?.username} -${data?.message} - ${formatCurrentTime()} `;
+      if(className){
+        li.classList.add(className)
+      }
+      messagesList.appendChild(li);
+    }
+
+    //socket.on('ping')
+
+    // Log messages from the server
+    socket.on('message', (data) => {
+      // const messageElement = document.createElement('div');
+      // messageElement.textContent = `Reply from server: ${data}`;
+      // messagesDiv.appendChild(messageElement);
+      console.log('DATA', data)
+      addMessage(data);
+    });
+
+    // User left message
+    socket.on('user-left', (data) => {
+      // const messageElement = document.createElement('div');
+      // messageElement.textContent = `Server: ${data.message}`;
+      // messagesDiv.appendChild(messageElement);
+      addMessage(data?.message);
+
+    });
+
+    // Send 'ping' message when button is clicked
+    sendButton.addEventListener('click', () => {
+      const sms = messageInput.value.trim();
+      if(sms!==''){
+        socket.emit('ping', { message: sms, username: socket.id });
+        messageInput.value = '';
+      }
+    });
+
+    // Display connection info
+    socket.on('connect', () => {
+      // const messageElement = document.createElement('div');
+      // messageElement.textContent = `Connected to WebSocket server with ID: ${socket.id}`;
+      // messagesDiv.appendChild(messageElement);
+      const data ={
+        userId: '2024uadel21',
+        message: 'You have joined!',
+        username:'NewUser',
+      }
+      addMessage(data)
+    });
+
+    // Display disconnection info
+    socket.on('disconnect', () => {
+      // const messageElement = document.createElement('div');
+      // messageElement.textContent = 'Disconnected from WebSocket server';
+      // messagesDiv.appendChild(messageElement);
+      const data ={
+        userId: '2024uadel21',
+        message: 'You left application!',
+        username:'NewUser',
+      }
+      addMessage(data)
+    });
+  </script>
+</body>
+</html>
